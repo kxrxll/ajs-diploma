@@ -5,6 +5,8 @@ export default class Character {
     this.defence = 0;
     this.health = 50;
     this.type = type;
-    // TODO: throw error if user use "new Character()"
+    if (new.target) {
+      throw new Error('sthap it!');
+    }
   }
 }
