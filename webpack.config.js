@@ -28,13 +28,10 @@ module.exports = {
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
       {
-        test: /\.(png|jpg|gif)$/i,
+        test: /\.(png|jpg|gif)$/,
         use: [
           {
             loader: 'url-loader',
-            options: {
-              limit: 8192,
-            },
           },
         ],
       },
