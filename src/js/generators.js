@@ -1,5 +1,3 @@
-import Character from './Character';
-
 /**
  * Generates random characters
  *
@@ -8,12 +6,7 @@ import Character from './Character';
  * @returns Character type children (ex. Magician, Bowman, etc)
  */
 export function* characterGenerator(allowedTypes, maxLevel) {
-  // Это уже готовый список классов? Зачем нам подключеный модуль Character?
-  for (const item of allowedTypes) {
-    yield new Character(maxLevel, item.type);
-  }
-  /*
-  yield new allowedTypes[Math.floor(Math.random() * allowedTypes.length)](maxLevel); */
+  yield new allowedTypes[Math.floor(Math.random() * allowedTypes.length)](maxLevel);
 }
 
 export function generateTeam(allowedTypes, maxLevel, characterCount) {
