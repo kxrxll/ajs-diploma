@@ -11,18 +11,34 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    // Отлов контекста для слушателей
+    this.class = this;
   }
 
   init() {
+    // Отрисовка мира
     this.gamePlay.drawUi('prairie');
-    const firstLevelTeamPlayer = generateTeam([Swordsman, Bowman], 1, 2);
-    const playerPositions = Math.floor(Math.random() * (this.gamePlay.boardSize * 2));
-    const firstLevelTeamPlayerPositioned = firstLevelTeamPlayer.forEach((char) => new PositionedCharacter(char, playerPositions));
-    const firstLevelTeamComputer = generateTeam([Undead, Deamon, Vampire], 1, 2);
-    const computerPositions = this.gamePlay.boardSize * this.gamePlay.boardSize - Math.ceil(Math.random() * (this.gamePlay.boardSize * 2));
-    const firstLevelTeamComputerPositioned = firstLevelTeamComputer.forEach((char) => new PositionedCharacter(char, computerPositions));
-    this.gamePlay.redrawPositions(firstLevelTeamPlayerPositioned.concat(firstLevelTeamComputerPositioned));
-    // TODO: add event listeners to gamePlay events
+    const firstLevelTeamPlayer = generateTeam([Swordsman, Bowman,Mage], 1, 2);
+    // Слушатель новой игры и вспомогательные функции
+    this.gamePlay.newGameEl.addEventListener('click', () => {
+      const board = this.class.gamePlay.boardSize;
+      const playerRandomField = () => {
+        const column = Math.floor(Math.random() * 2);
+        const row = (board * Math.floor(Math.random() * board));
+        return column + row;
+      };
+      const computerRandomField = () => {
+        const column = Math.floor(Math.random() * 2 + this.class.gamePlay.boardSize - 2);
+        const row = (board * Math.floor(Math.random() * board));
+        return column + row;
+      };
+      const toPlayerPosition = (char) => new PositionedCharacter(char, playerRandomField());
+      const toComputerPosition = (char) => new PositionedCharacter(char, computerRandomField());
+      const PlayerPositioned = firstLevelTeamPlayer.map((item) => toPlayerPosition(item));
+      const firstLevelTeamComputer = generateTeam([Undead, Deamon, Vampire], 1, 2);
+      const ComputerPositioned = firstLevelTeamComputer.map((item) => toComputerPosition(item));
+      this.class.gamePlay.redrawPositions(PlayerPositioned.concat(ComputerPositioned));
+    });
     // TODO: load saved stated from stateService
   }
 
