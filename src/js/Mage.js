@@ -1,7 +1,7 @@
 import Character from './Character';
 
 export default class Mage extends Character {
-  constructor(level, type = 'mage') {
+  constructor(level, type = 'magician') {
     super(level);
     this.attack = 10;
     this.defence = 40;

@@ -1,6 +1,13 @@
 export default class GameState {
-  static from(object) {
-    // TODO: create object
-    return null;
+  constructor() {
+    this.turn = 'Player';
+  }
+
+  static nextTurn() {
+    if (this.turn === 'Player') {
+      this.turn = 'Computer';
+    } else {
+      this.turn = 'Player';
+    }
   }
 }
