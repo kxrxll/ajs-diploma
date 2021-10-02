@@ -1,6 +1,6 @@
 import Character from './Character';
 
-export default class Deamon extends Character {
+export default class Daemon extends Character {
   constructor(level, type = 'daemon') {
     super(level);
     this.attack = 10;
