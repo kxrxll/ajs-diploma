@@ -9,6 +9,8 @@ import Vampire from './Vampire';
 import GameState from './GameState';
 import GamePlay from './GamePlay';
 import cursors from './cursors';
+import possibleMoves from './possibleMoves';
+import possibleAttack from './possibleAttack';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -59,15 +61,41 @@ export default class GameController {
   onCellClick(index) {
     for (const item of this.charsPositions) {
       if (item.position === index) {
+        // Перевыбор персонажа
         if (item.character.type === 'swordsman' || item.character.type === 'bowman' || item.character.type === 'magician') {
+          // Обработка предыдущего выбранного
           if (this.selected.index !== undefined) {
             this.gamePlay.deselectCell(this.selected.index);
           }
           this.selected.character = item.character;
           this.selected.index = index;
           this.gamePlay.selectCell(index);
-        } else {
-          GamePlay.showError('Enemy character can not be selected!');
+        } else if (item.character.type === 'deamon' || item.character.type === 'undead' || item.character.type === 'vampire') {
+          // Попытка выбора вражеского персонажа
+          if (this.selected.index !== undefined) {
+            GamePlay.showError('Enemy character can not be selected!');
+          } else {
+            // логика атаки на вражеского персонажа
+            console.log('hey');
+          }
+        }
+      } else {
+        // Логика перехода на ячейку
+        const board = this.gamePlay.boardSize;
+        const moves = possibleMoves(this.selected.index, board, this.selected.character.type);
+        if (moves.indexOf(index) !== -1) {
+          this.gamePlay.deselectCell(this.selected.index);
+          // Находим в массиве персонажа по позиции
+          for (const char of this.charsPositions) {
+            if (char.position === this.selected.index) {
+              // Меняем ему позицию в массиве
+              char.position = index;
+            }
+          }
+          // Отрисовываем поле заново
+          this.selected.index = index;
+          this.gamePlay.selectCell(index);
+          this.gamePlay.redrawPositions(this.charsPositions);
         }
       }
     }
@@ -85,8 +113,14 @@ export default class GameController {
           || item.character.type === 'daemon'
           || item.character.type === 'vampire')) {
           // Логика при выбранном персонаже
-          this.gamePlay.setCursor(cursors.crosshair);
-          this.gamePlay.selectCell(index, 'red');
+          const board = this.gamePlay.boardSize;
+          const attack = possibleAttack(this.selected.index, board, this.selected.character.type);
+          if (attack.indexOf(index) !== -1) {
+            this.gamePlay.setCursor(cursors.crosshair);
+            this.gamePlay.selectCell(index, 'red');
+          } else {
+            this.gamePlay.setCursor(cursors.notallowed);
+          }
         } else if (this.selected.character === undefined && (
           item.character.type === 'undead'
           || item.character.type === 'daemon'
@@ -98,15 +132,14 @@ export default class GameController {
         const defence = String.fromCodePoint(0x1F6E1);
         const health = String.fromCodePoint(0x2764);
         this.gamePlay.showCellTooltip(`${item.character.level}${level} ${item.character.attack}${attack} ${item.character.defence}${defence} ${item.character.health}${health}`, index);
-      } else if (this.selected.index !== index) {
-        if (this.selected.character.type === 'swordsman') {
-          const allowedArr = Swordsman
-            .isAllowedToMove(this.selected.index, this.gamePlay.boardSize);
-          console.log(allowedArr);
-          console.log(index); // Индес сука с нуля идет =( АААА!!!
-        }
+      } else if (this.selected.index !== index && this.selected.character !== undefined) {
         // Логика для ячейки без персонажа
-        // this.gamePlay.selectCell(index, 'green');
+        const board = this.gamePlay.boardSize;
+        const moves = possibleMoves(this.selected.index, board, this.selected.character.type);
+        if (moves.indexOf(index) !== -1) {
+          this.gamePlay.selectCell(index, 'green');
+          this.gamePlay.setCursor(cursors.pointer);
+        }
       }
     }
   }
