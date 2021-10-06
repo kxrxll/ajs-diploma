@@ -70,14 +70,15 @@ export default class GameController {
           this.selected.character = item.character;
           this.selected.index = index;
           this.gamePlay.selectCell(index);
-        } else if (item.character.type === 'deamon' || item.character.type === 'undead' || item.character.type === 'vampire') {
+        } else if ((item.character.type === 'deamon' || item.character.type === 'undead' || item.character.type === 'vampire') && this.selected.index) {
+          // Атака на персонажа
+          // Проверяем через функцию разрешения атаки
+          // Используем метод класса атаки
+          // Записываем значение
+          console.log('Attack!');
+        } else if ((item.character.type === 'deamon' || item.character.type === 'undead' || item.character.type === 'vampire') && this.selected.index !== undefined) {
           // Попытка выбора вражеского персонажа
-          if (this.selected.index !== undefined) {
-            GamePlay.showError('Enemy character can not be selected!');
-          } else {
-            // логика атаки на вражеского персонажа
-            console.log('hey');
-          }
+          GamePlay.showError('Enemy character can not be selected!');
         }
       } else {
         // Логика перехода на ячейку
@@ -96,6 +97,7 @@ export default class GameController {
           this.selected.index = index;
           this.gamePlay.selectCell(index);
           this.gamePlay.redrawPositions(this.charsPositions);
+          // Туду – переход хода здесь
         }
       }
     }
