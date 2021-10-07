@@ -18,3 +18,10 @@ build_script:
 
 test_script:
   - npm run lint && npm test  # скрипт тестирования
+
+deploy_script: #скрипт развёртывания
+  - gitconfig --globalcredential.helper store
+  - gitconfig --globaluser.name AppVeyor
+  - gitconfig --globaluser.emailci@appveyor.com
+  - echo"https://$GITHUB_TOKEN:x-oauth-basic@github.com" > "$HOME/.git-credentials"
+  - npxpush-dir --dir=dist --branch=gh-pages --force --verbose

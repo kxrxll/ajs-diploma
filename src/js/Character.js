@@ -17,4 +17,11 @@ export default class Character {
     }
     */
   }
+
+  getHit(damage) {
+    this.health -= Math.max(damage - this.defence, damage * 0.1);
+    if (this.health < 0) {
+      this.health = 0;
+    }
+  }
 }
