@@ -24,7 +24,7 @@ const possibleMoves = (index, boardsize, char) => {
   if (index - boardsize - 1 >= 0) {
     result.push(index - boardsize - 1);
   }
-  if (char === 'bowman' || char === 'swordsman') {
+  if (char === 'bowman' || char === 'swordsman' || char === 'vampire' || char === 'undead') {
     if (index + 2 < boardsize * boardsize) {
       result.push(index + 2);
     }
@@ -49,7 +49,7 @@ const possibleMoves = (index, boardsize, char) => {
     if (index - boardsize * 2 - 2 >= 0) {
       result.push(index - boardsize * 2 - 2);
     }
-    if (char === 'swordsman') {
+    if (char === 'swordsman' || char === 'undead') {
       if (index + 3 < boardsize * boardsize) {
         result.push(index + 3);
       }

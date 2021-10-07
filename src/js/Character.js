@@ -19,9 +19,12 @@ export default class Character {
   }
 
   getHit(damage) {
-    this.health -= Math.max(damage - this.defence, damage * 0.1);
+    const realDamage = Math.max(damage - this.defence, damage * 0.1);
+    this.health -= realDamage;
+    console.log(`${this.type} gets ${realDamage} damage`);
     if (this.health < 0) {
       this.health = 0;
+      console.log(`${this.type} dies`);
     }
   }
 }

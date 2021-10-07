@@ -11,6 +11,7 @@ import GamePlay from './GamePlay';
 import cursors from './cursors';
 import possibleMoves from './possibleMoves';
 import possibleAttack from './possibleAttack';
+import randomMove from './randomMove';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -36,7 +37,7 @@ export default class GameController {
 
   onNewGameClick() {
     if (this.selected.character !== undefined) {
-      this.gamePlay.deselectCell(this.selected.index);
+      this.gamePlay.deselectCell(this.selected.position);
       this.selected = {};
     }
     const board = this.gamePlay.boardSize;
@@ -66,56 +67,29 @@ export default class GameController {
       // Перевыбор персонажа
       if (clickedChar.character.type === 'swordsman' || clickedChar.character.type === 'bowman' || clickedChar.character.type === 'magician') {
         // Обработка предыдущего выбранного
-        if (this.selected.index !== undefined) {
-          this.gamePlay.deselectCell(this.selected.index);
+        if (this.selected.position !== undefined) {
+          this.gamePlay.deselectCell(this.selected.position);
         }
         this.selected.character = clickedChar.character;
-        this.selected.index = index;
+        this.selected.position = index;
         this.gamePlay.selectCell(index);
-      } else if ((clickedChar.character.type === 'daemon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.index !== undefined) {
-        // Проверяем через функцию разрешения атаки
-        const board = this.gamePlay.boardSize;
-        const attack = possibleAttack(this.selected.index, board, this.selected.character.type);
-        if (attack.indexOf(index) !== -1) {
-          // Атака на персонажа
-          clickedChar.character.getHit(this.selected.character.attack);
-          if (clickedChar.character.health === 0) {
-            // Проверка на гибель персонажа и удаление его из массива игровых персонажей
-            this.charsPositions.splice(
-              this.charsPositions.indexOf(clickedChar),
-              1,
-            );
-            // Отрисовываем поле без персонажа
-            this.gamePlay.redrawPositions(this.charsPositions);
-            // Курсор типа покидает ячейку
-            this.onCellLeave(index);
-          }
-        }
+      } else if ((clickedChar.character.type === 'daemon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.position !== undefined) {
+        this.attackCharacter(clickedChar, this.selected);
+        this.computerTurn();
       } else if ((clickedChar.character.type === 'deamon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.index === undefined) {
         // Попытка выбора вражеского персонажа
         GamePlay.showError('Enemy character can not be selected!');
       }
-    } else if (this.selected.index !== undefined) {
-      // Логика перехода на ячейку
-      const board = this.gamePlay.boardSize;
-      const moves = possibleMoves(this.selected.index, board, this.selected.character.type);
-      if (moves.indexOf(index) !== -1) {
-        this.gamePlay.deselectCell(this.selected.index);
-        // Находим в массиве персонажа по позиции
-        for (const char of this.charsPositions) {
-          if (char.position === this.selected.index) {
-            // Меняем ему позицию в массиве
-            char.position = index;
-          }
-        }
-        // Отрисовываем поле заново
-        this.selected.index = index;
-        this.gamePlay.selectCell(index);
-        this.gamePlay.redrawPositions(this.charsPositions);
-        // Туду – переход хода здесь
-      }
+    } else if (this.selected.position !== undefined) {
+      // Функция движения по полю
+      this.moveCharecter(index, this.selected);
+      this.selected.position = index;
+      this.gamePlay.selectCell(index);
+      // Переход хода
+      this.computerTurn();
     }
   }
+
 
   onCellEnter(index) {
     if (this.charsPositions.find((item) => item.position === index)) {
@@ -130,7 +104,7 @@ export default class GameController {
         || clickedChar.character.type === 'vampire')) {
         // Логика при выбранном персонаже
         const board = this.gamePlay.boardSize;
-        const attack = possibleAttack(this.selected.index, board, this.selected.character.type);
+        const attack = possibleAttack(this.selected.position, board, this.selected.character.type);
         if (attack.indexOf(index) !== -1) {
           this.gamePlay.setCursor(cursors.crosshair);
           this.gamePlay.selectCell(index, 'red');
@@ -148,10 +122,10 @@ export default class GameController {
       const defence = String.fromCodePoint(0x1F6E1);
       const health = String.fromCodePoint(0x2764);
       this.gamePlay.showCellTooltip(`${clickedChar.character.level}${level} ${clickedChar.character.attack}${attack} ${clickedChar.character.defence}${defence} ${clickedChar.character.health}${health}`, index);
-    } else if (this.selected.index !== index && this.selected.character !== undefined) {
+    } else if (this.selected.position !== index && this.selected.character !== undefined) {
       // Логика для ячейки без персонажа
       const board = this.gamePlay.boardSize;
-      const moves = possibleMoves(this.selected.index, board, this.selected.character.type);
+      const moves = possibleMoves(this.selected.position, board, this.selected.character.type);
       if (moves.indexOf(index) !== -1) {
         this.gamePlay.selectCell(index, 'green');
         this.gamePlay.setCursor(cursors.pointer);
@@ -160,10 +134,62 @@ export default class GameController {
   }
 
   onCellLeave(index) {
-    if (this.selected.index !== index) {
+    if (this.selected.position !== index) {
       this.gamePlay.deselectCell(index);
     }
     this.gamePlay.setCursor(cursors.auto);
     this.gamePlay.hideCellTooltip(index);
+  }
+
+  moveCharecter(index, selected) {
+    // Логика перехода на ячейку
+    const board = this.gamePlay.boardSize;
+    const moves = possibleMoves(selected.position, board, selected.character.type);
+    if (moves.indexOf(index) !== -1) {
+      this.gamePlay.deselectCell(selected.position);
+      // Находим в массиве персонажа по позиции
+      for (const char of this.charsPositions) {
+        if (char.position === selected.position) {
+          // Меняем ему позицию в массиве
+          char.position = index;
+        }
+      }
+      // Отрисовываем поле заново
+      this.gamePlay.redrawPositions(this.charsPositions);
+    }
+  }
+
+  attackCharacter(victim, attacker) {
+    const board = this.gamePlay.boardSize;
+    const attack = possibleAttack(attacker.position, board, attacker.character.type);
+    if (attack.indexOf(victim.position) !== -1) {
+    // Атака на персонажа
+      victim.character.getHit(attacker.character.attack);
+      if (victim.character.health === 0) {
+      // Проверка на гибель персонажа и удаление его из массива игровых персонажей
+        this.charsPositions.splice(
+          this.charsPositions.indexOf(victim),
+          1,
+        );
+        // Отрисовываем поле без персонажа
+        this.gamePlay.redrawPositions(this.charsPositions);
+        // Курсор типа покидает ячейку
+        this.onCellLeave(victim.position);
+      }
+    }
+  }
+
+  computerTurn() {
+    // Передача хода в геймстейт
+    GameState.nextTurn();
+    // Определение случайного хода
+    const nextMove = randomMove(this.charsPositions, this.gamePlay.boardSize);
+    // Определение и применение хода компьютера
+    if (nextMove.attack) {
+      this.attackCharacter(nextMove.attack, nextMove.char);
+    } else if (nextMove.move) {
+      this.moveCharecter(nextMove.move, nextMove.char);
+    }
+    GameState.nextTurn();
   }
 }

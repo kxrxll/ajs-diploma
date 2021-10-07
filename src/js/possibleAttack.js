@@ -24,7 +24,7 @@ const possibleAttack = (index, boardsize, char) => {
   if (index - boardsize - 1 >= 0) {
     result.push(index - boardsize - 1);
   }
-  if (char === 'bowman' || char === 'magician') {
+  if (char === 'bowman' || char === 'magician' || char === 'vampire' || char === 'daemon') {
     if (index + 2 < boardsize * boardsize) {
       result.push(index + 2);
     }
@@ -73,7 +73,7 @@ const possibleAttack = (index, boardsize, char) => {
     if (index - boardsize * 2 - 2 >= 0) {
       result.push(index - boardsize * 2 - 2);
     }
-    if (char === 'magician') {
+    if (char === 'magician' || char === 'daemon') {
       if (index + 3 < boardsize * boardsize) {
         result.push(index + 3);
       }
