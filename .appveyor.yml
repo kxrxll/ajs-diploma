@@ -1,11 +1,14 @@
 image: Ubuntu1804
 stack: node12
-branches: only:-master
-gitcache: node_modules
+branches: 
+  only: -master
+cache: node_modules
 install: -npm install
 build: off 
-build_script: -npm runbuild 
-test_script: -npm run lint && npmtest 
+build_script: 
+  -npm runbuild 
+test_script: 
+  -npm run lint && npmtest 
 deploy_script: 
   -git config --global credential.helper store 
   -gitconfig --global user.nameAppVeyor
