@@ -5,6 +5,7 @@ export default class Character {
     this.defence = 0;
     this.health = 50;
     this.type = type;
+    /*
     if ((new.target.name !== 'Bowman')
      && (new.target.name !== 'Daemon')
       && (new.target.name !== 'Mage')
@@ -14,6 +15,7 @@ export default class Character {
     ) {
       throw new Error('sthap it!');
     }
+    */
   }
 
   getHit(damage) {
