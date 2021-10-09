@@ -6,7 +6,7 @@ export default class Character {
     this.health = 50;
     this.type = type;
     if ((new.target.name !== 'Bowman')
-     && (new.target.name !== 'Deamon')
+     && (new.target.name !== 'Daemon')
       && (new.target.name !== 'Mage')
        && (new.target.name !== 'Swordsman')
         && (new.target.name !== 'Undead')
