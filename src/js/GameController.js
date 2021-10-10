@@ -12,6 +12,7 @@ import cursors from './cursors';
 import possibleMoves from './possibleMoves';
 import possibleAttack from './possibleAttack';
 import randomMove from './randomMove';
+import themes from './themes';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -31,7 +32,8 @@ export default class GameController {
     // Добавлениеи клика на ячейки
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
     // Отрисовка поля
-    this.gamePlay.drawUi('prairie');
+    this.theme = themes.prairie;
+    this.gamePlay.drawUi(this.theme);
     // TODO: load saved stated from stateService
   }
 
@@ -53,7 +55,7 @@ export default class GameController {
     };
     const toPlayerPosition = (char) => new PositionedCharacter(char, playerRandomField());
     const toComputerPosition = (char) => new PositionedCharacter(char, computerRandomField());
-    const firstLevelTeamPlayer = generateTeam([Swordsman, Bowman, Mage], 1, 2);
+    const firstLevelTeamPlayer = generateTeam([Swordsman, Bowman], 1, 2);
     const PlayerPositioned = firstLevelTeamPlayer.map((item) => toPlayerPosition(item));
     const firstLevelTeamComputer = generateTeam([Undead, Daemon, Vampire], 1, 2);
     const ComputerPositioned = firstLevelTeamComputer.map((item) => toComputerPosition(item));
@@ -81,11 +83,11 @@ export default class GameController {
           this.onCellLeave(index);
           this.computerTurn();
         }
-      } else if ((clickedChar.character.type === 'deamon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.index === undefined) {
+      } else if ((clickedChar.character.type === 'deamon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.position === undefined) {
         // Попытка выбора вражеского персонажа
         GamePlay.showError('Enemy character can not be selected!');
       }
-    } else if (this.moveCharecter(index, this.selected)) {
+    } else if (this.selected.position !== undefined && this.moveCharecter(index, this.selected)) {
       // Функция движения по полю возвращает массив в случае возможности хода
       this.gamePlay.redrawPositions(this.moveCharecter(index, this.selected));
       this.gamePlay.deselectCell(this.selected.position);
@@ -177,13 +179,10 @@ export default class GameController {
       if (victim.character.health === 0) {
       // Проверка на гибель персонажа и удаление его из массива игровых персонажей
         result.splice(result.indexOf(victim), 1);
-        /*
-        // Отрисовываем поле без персонажа
-        this.gamePlay.redrawPositions(this.charsPositions);
-        */
         // Курсор типа покидает ячейку
         this.onCellLeave(victim.position);
         if (victim.character.type === 'swordsman' || victim.character.type === 'bowman' || victim.character.type === 'magician') {
+          this.selected = {};
           this.gamePlay.deselectCell(victim.position);
         }
       }
@@ -193,17 +192,97 @@ export default class GameController {
   }
 
   computerTurn() {
+    // Проверка на смерть всех персонажей компьютера
+    if (!this.charsPositions.find((item) => item.character.type === 'daemon' || item.character.type === 'undead' || item.character.type === 'vampire')) {
+      // Выйгрыш игрока
+      this.nextLevel();
+    } else {
     // Передача хода в геймстейт
-    GameState.nextTurn();
-    // Определение случайного хода
-    const nextMove = randomMove(this.charsPositions, this.gamePlay.boardSize);
-    // Определение и применение хода компьютера
-    if (nextMove.attack) {
-      this.attackCharacter(nextMove.attack, nextMove.char);
-    } else if (nextMove.move) {
-      this.moveCharecter(nextMove.move, nextMove.char);
+      GameState.nextTurn();
+      // Определение случайного хода
+      const nextMove = randomMove(this.charsPositions, this.gamePlay.boardSize);
+      // Определение и применение хода компьютера
+      if (nextMove.attack) {
+        this.attackCharacter(nextMove.attack, nextMove.char);
+      } else if (nextMove.move) {
+        this.moveCharecter(nextMove.move, nextMove.char);
+      }
+      // Проверка на смерть всех персонажей игрока после атаки компьютера
+      if (!this.charsPositions.find((item) => item.character.type === 'swordsman' || item.character.type === 'bowman' || item.character.type === 'magician')) {
+        // Выйгрыш компьютера
+        GamePlay.showError('Try again!');
+        this.theme = themes.prairie;
+        this.onNewGameClick();
+      } else {
+        this.gamePlay.redrawPositions(this.charsPositions);
+        GameState.nextTurn();
+      }
     }
+  }
+
+  nextLevel() {
+    // Проверяем конец игры
+    if (!themes.nextLevel(this.theme)) {
+      GamePlay.showError(`Congratulations! Your points: ${GameState.showPoints()}`);
+      GameState.resetPoints();
+      this.theme = themes.prairie;
+      this.onNewGameClick();
+    }
+    // Снимаем выделение и текущего выбранного персонажа
+    this.onCellLeave(this.selected.position);
+    this.selected = {};
+    // Отривоываем UI
+    this.theme = themes.nextLevel(this.theme);
+    this.gamePlay.drawUi(this.theme);
+    // Обрабатываем команду игрока
+    const newPlayerTeam = [];
+    for (const postionedChar of this.charsPositions) {
+      // Считаем и отправляем баллы в GameState
+      GameState.addPoints(postionedChar.character.health);
+      // Повышаем уровни
+      postionedChar.character.levelUp();
+      newPlayerTeam.push(postionedChar.character);
+    }
+    // Генерируем персонажей игроку b и компьютеру в зависимости от уровня
+    let playerChars = [];
+    let computerChars = [];
+    let computerMaxLevel = 0;
+    let playerCharsNumber = newPlayerTeam.length;
+    if (this.theme === 'desert') {
+      playerChars = generateTeam([Swordsman, Bowman, Mage], 1, 1);
+      playerCharsNumber += 1;
+    } else if (this.theme === 'arctic') {
+      playerChars = generateTeam([Swordsman, Bowman, Mage], 2, 2);
+      computerMaxLevel = 3;
+      playerCharsNumber += 2;
+    } else if (this.theme === 'mountain') {
+      playerChars = generateTeam([Swordsman, Bowman, Mage], 3, 2);
+      computerMaxLevel = 4;
+      playerCharsNumber += 2;
+    }
+    // Генерируем команду компьютера в зависимости от команды игрока
+    computerChars = generateTeam([Undead, Daemon, Vampire], computerMaxLevel, playerCharsNumber);
+    // Ячейки для переотрисовки персонажей
+    const board = this.gamePlay.boardSize;
+    const playerRandomField = () => {
+      const column = Math.floor(Math.random() * 2);
+      const row = (board * Math.floor(Math.random() * board));
+      return column + row;
+    };
+    const computerRandomField = () => {
+      const column = Math.floor(Math.random() * 2 + this.gamePlay.boardSize - 2);
+      const row = (board * Math.floor(Math.random() * board));
+      return column + row;
+    };
+    const toPlayerPosition = (char) => new PositionedCharacter(char, playerRandomField());
+    const toComputerPosition = (char) => new PositionedCharacter(char, computerRandomField());
+    // Генерация случайных персонажей игрока
+    playerChars = playerChars.concat(newPlayerTeam);
+    const PlayerPositioned = playerChars.map((item) => toPlayerPosition(item));
+    const ComputerPositioned = computerChars.map((item) => toComputerPosition(item));
+    // Обьединение
+    this.charsPositions = PlayerPositioned.concat(ComputerPositioned);
+    // Отрисовка
     this.gamePlay.redrawPositions(this.charsPositions);
-    GameState.nextTurn();
   }
 }

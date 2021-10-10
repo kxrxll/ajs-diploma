@@ -16,4 +16,13 @@ export default class Character {
       console.log(`${this.type} dies`);
     }
   }
+
+  levelUp() {
+    this.level += 1;
+    this.attack = Math.max(this.attack, (this.attack * (1.8 - this.health)) / 100);
+    this.health += 80;
+    if (this.health > 100) {
+      this.health = 100;
+    }
+  }
 }
