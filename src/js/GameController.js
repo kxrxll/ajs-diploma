@@ -38,6 +38,8 @@ export default class GameController {
   }
 
   onNewGameClick() {
+    this.theme = themes.prairie;
+    this.gamePlay.drawUi(this.theme);
     if (this.selected.character !== undefined) {
       this.gamePlay.deselectCell(this.selected.position);
       this.selected = {};
@@ -225,7 +227,6 @@ export default class GameController {
     if (!themes.nextLevel(this.theme)) {
       GamePlay.showError(`Congratulations! Your points: ${GameState.showPoints()}`);
       GameState.resetPoints();
-      this.theme = themes.prairie;
       this.onNewGameClick();
     }
     // Снимаем выделение и текущего выбранного персонажа
