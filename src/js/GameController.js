@@ -239,7 +239,6 @@ export default class GameController {
     for (const postionedChar of this.charsPositions) {
       // Считаем и отправляем баллы в GameState
       GameState.addPoints(postionedChar.character.health);
-      // Повышаем уровни
       postionedChar.character.levelUp();
       newPlayerTeam.push(postionedChar.character);
     }

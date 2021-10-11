@@ -1,149 +1,215 @@
 const possibleAttack = (index, boardsize, char) => {
   const result = [];
-  if (index + 1 < boardsize * boardsize) {
+  const validate = (value, boardSize) => {
+    if (value < boardSize * boardSize && value >= 0) {
+      // Левый край
+      if (index % boardsize === 0 && (value + 1) % boardsize === 0) {
+        return false;
+      }
+      // Правый край
+      if ((index + 1) % boardsize === 0 && value % boardsize === 0) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  };
+  if (validate((index + 1), boardsize)) {
     result.push(index + 1);
   }
-  if (index - 1 >= 0) {
+  if (validate((index - 1), boardsize)) {
     result.push(index - 1);
   }
-  if (index + boardsize < boardsize * boardsize) {
+  if (validate((index + boardsize), boardsize)) {
     result.push(index + boardsize);
   }
-  if (index + boardsize + 1 < boardsize * boardsize) {
+  if (validate((index + boardsize + 1), boardsize)) {
     result.push(index + boardsize + 1);
   }
-  if (index + boardsize - 1 < boardsize * boardsize) {
+  if (validate((index + boardsize - 1), boardsize)) {
     result.push(index + boardsize - 1);
   }
-  if (index - boardsize >= 0) {
+  if (validate((index - boardsize), boardsize)) {
     result.push(index - boardsize);
   }
-  if (index - boardsize + 1 >= 0) {
+  if (validate((index - boardsize + 1), boardsize)) {
     result.push(index - boardsize + 1);
   }
-  if (index - boardsize - 1 >= 0) {
+  if (validate((index - boardsize - 1), boardsize)) {
     result.push(index - boardsize - 1);
   }
   if (char === 'bowman' || char === 'magician' || char === 'vampire' || char === 'daemon') {
-    if (index + 2 < boardsize * boardsize) {
+    const validateSecond = (value, boardSize) => {
+      if (value < boardSize * boardSize && value >= 0) {
+        // Левый край
+        if (index % boardsize === 0 && (value + 2) % boardsize === 0) {
+          return false;
+        }
+        // Правый край
+        if ((index + 1) % boardsize === 0 && (value - 1) % boardsize === 0) {
+          return false;
+        }
+        // Предлевый край
+        if ((index - 1) % boardsize === 0 && (value + 1) % boardsize === 0) {
+          return false;
+        }
+        // Предправый край
+        if ((index + 2) % boardsize === 0 && value % boardsize === 0) {
+          return false;
+        }
+        return true;
+      }
+      return false;
+    };
+    if (validateSecond((index + 2), boardsize)) {
       result.push(index + 2);
     }
-    if (index - 2 >= 0) {
+    if (validateSecond((index - 2), boardsize)) {
       result.push(index - 2);
     }
-    if (index + 2 + boardsize < boardsize * boardsize) {
+    if (validateSecond((index + 2 + boardsize), boardsize)) {
       result.push(index + 2 + boardsize);
     }
-    if (index + 2 - boardsize >= 0) {
+    if (validateSecond((index + 2 - boardsize), boardsize)) {
       result.push(index + 2 - boardsize);
     }
-    if (index - 2 + boardsize < boardsize * boardsize) {
+    if (validateSecond((index - 2 + boardsize), boardsize)) {
       result.push(index - 2 + boardsize);
     }
-    if (index - 2 + boardsize >= 0) {
+    if (validateSecond((index - 2 + boardsize), boardsize)) {
       result.push(index - 2 + boardsize);
     }
-    if (index + 1 + boardsize * 2 < boardsize * boardsize) {
+    if (validateSecond((index + 1 + boardsize * 2), boardsize)) {
       result.push(index + 1 + boardsize * 2);
     }
-    if (index + 1 - boardsize * 2 >= 0) {
+    if (validateSecond((index + 1 - boardsize * 2), boardsize)) {
       result.push(index + 1 - boardsize * 2);
     }
-    if (index - 1 + boardsize * 2 < boardsize * boardsize) {
+    if (validateSecond((index - 1 + boardsize * 2), boardsize)) {
       result.push(index - 1 + boardsize * 2);
     }
-    if (index - 1 + boardsize * 2 >= 0) {
+    if (validateSecond((index - 1 + boardsize * 2), boardsize)) {
       result.push(index - 1 + boardsize * 2 >= 0);
     }
-    if (index + boardsize * 2 < boardsize * boardsize) {
+    if (validateSecond((index + boardsize * 2), boardsize)) {
       result.push(index + boardsize * 2);
     }
-    if (index - boardsize * 2 >= 0) {
+    if (validateSecond((index - boardsize * 2), boardsize)) {
       result.push(index - boardsize * 2);
     }
-    if (index + boardsize * 2 + 2 < boardsize * boardsize) {
+    if (validateSecond((index + boardsize * 2 + 2), boardsize)) {
       result.push(index + boardsize * 2 + 2);
     }
-    if (index + boardsize * 2 - 2 < boardsize * boardsize) {
+    if (validateSecond((index + boardsize * 2 - 2), boardsize)) {
       result.push(index + boardsize * 2 - 2);
     }
-    if (index - boardsize * 2 + 2 >= 0) {
+    if (validateSecond((index - boardsize * 2 + 2), boardsize)) {
       result.push(index - boardsize * 2 + 2);
     }
-    if (index - boardsize * 2 - 2 >= 0) {
+    if (validateSecond((index - boardsize * 2 - 2), boardsize)) {
       result.push(index - boardsize * 2 - 2);
     }
     if (char === 'magician' || char === 'daemon') {
-      if (index + 3 < boardsize * boardsize) {
+      const validateThird = (value, boardSize) => {
+        if (value < boardSize * boardSize && value >= 0) {
+          // Левый край
+          if (index % boardsize === 0 && (value + 3) % boardsize === 0) {
+            return false;
+          }
+          // Правый край
+          if ((index + 1) % boardsize === 0 && (value - 2) % boardsize === 0) {
+            return false;
+          }
+          // Предлевый край
+          if ((index - 1) % boardsize === 0 && (value + 2) % boardsize === 0) {
+            return false;
+          }
+          // Предправый край
+          if ((index + 2) % boardsize === 0 && (value - 1) % boardsize === 0) {
+            return false;
+          }
+          // Предпредлевый край
+          if ((index - 2) % boardsize === 0 && (value + 1) % boardsize === 0) {
+            return false;
+          }
+          // Предпредправый край
+          if ((index + 3) % boardsize === 0 && value % boardsize === 0) {
+            return false;
+          }
+          return true;
+        }
+        return false;
+      };
+      if (validateThird((index + 3), boardsize)) {
         result.push(index + 3);
       }
-      if (index - 3 >= 0) {
+      if (validateThird((index - 3), boardsize)) {
         result.push(index - 3);
       }
-      if (index + 3 + boardsize < boardsize * boardsize) {
+      if (validateThird((index + 3 + boardsize), boardsize)) {
         result.push(index + 3 + boardsize);
       }
-      if (index + 3 - boardsize >= 0) {
+      if (validateThird((index + 3 - boardsize), boardsize)) {
         result.push(index + 3 - boardsize);
       }
-      if (index - 3 + boardsize < boardsize * boardsize) {
+      if (validateThird((index - 3 + boardsize), boardsize)) {
         result.push(index - 3 + boardsize);
       }
-      if (index - 3 - boardsize >= 0) {
+      if (validateThird((index - 3 - boardsize), boardsize)) {
         result.push(index - 3 - boardsize);
       }
-      if (index + 3 + boardsize * 2 < boardsize * boardsize) {
+      if (validateThird((index + 3 + boardsize * 2), boardsize)) {
         result.push(index + 3 + boardsize * 2);
       }
-      if (index + 3 - boardsize * 2 >= 0) {
+      if (validateThird((index + 3 - boardsize * 2), boardsize)) {
         result.push(index + 3 - boardsize * 2);
       }
-      if (index - 3 + boardsize * 2 < boardsize * boardsize) {
+      if (validateThird((index - 3 + boardsize * 2), boardsize)) {
         result.push(index - 3 + boardsize * 2);
       }
-      if (index - 3 - boardsize * 2 >= 0) {
+      if (validateThird((index - 3 - boardsize * 2), boardsize)) {
         result.push(index - 3 - boardsize * 2);
       }
-      if (index + boardsize * 3 < boardsize * boardsize) {
+      if (validateThird((index + boardsize * 3), boardsize)) {
         result.push(index + boardsize * 3);
       }
-      if (index - boardsize * 3 >= 0) {
+      if (validateThird((index - boardsize * 3), boardsize)) {
         result.push(index - boardsize * 3);
       }
-      if (index + 1 + boardsize * 3 < boardsize * boardsize) {
+      if (validateThird((index + 1 + boardsize * 3), boardsize)) {
         result.push(index + 1 + boardsize * 3);
       }
-      if (index + 1 - boardsize * 3 >= 0) {
+      if (validateThird((index + 1 - boardsize * 3), boardsize)) {
         result.push(index + 1 - boardsize * 3);
       }
-      if (index - 1 + boardsize * 3 < boardsize * boardsize) {
+      if (validateThird((index - 1 + boardsize * 3), boardsize)) {
         result.push(index - 1 + boardsize * 3);
       }
-      if (index - 1 - boardsize * 3 >= 0) {
+      if (validateThird((index - 1 - boardsize * 3), boardsize)) {
         result.push(index - 1 - boardsize * 3);
       }
-      if (index + 2 + boardsize * 3 < boardsize * boardsize) {
+      if (validateThird((index + 2 + boardsize * 3), boardsize)) {
         result.push(index + 2 + boardsize * 3);
       }
-      if (index + 2 - boardsize * 3 >= 0) {
+      if (validateThird((index + 2 - boardsize * 3), boardsize)) {
         result.push(index + 2 - boardsize * 3);
       }
-      if (index - 2 + boardsize * 3 < boardsize * boardsize) {
+      if (validateThird((index - 2 + boardsize * 3), boardsize)) {
         result.push(index - 2 + boardsize * 3);
       }
-      if (index - 2 - boardsize * 3 >= 0) {
+      if (validateThird((index - 2 - boardsize * 3), boardsize)) {
         result.push(index - 2 - boardsize * 3);
       }
-      if (index + boardsize * 3 + 3 < boardsize * boardsize) {
+      if (validateThird((index + boardsize * 3 + 3), boardsize)) {
         result.push(index + boardsize * 3 + 3);
       }
-      if (index + boardsize * 3 - 3 < boardsize * boardsize) {
+      if (validateThird((index + boardsize * 3 - 3), boardsize)) {
         result.push(index + boardsize * 3 - 3);
       }
-      if (index - boardsize * 3 + 3 >= 0) {
+      if (validateThird((index - boardsize * 3 + 3), boardsize)) {
         result.push(index - boardsize * 3 + 3);
       }
-      if (index - boardsize * 3 - 3 >= 0) {
+      if (validateThird((index - boardsize * 3 - 3), boardsize)) {
         result.push(index - boardsize * 3 - 3);
       }
     }
