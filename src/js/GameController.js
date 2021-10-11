@@ -58,10 +58,20 @@ export default class GameController {
     const toPlayerPosition = (char) => new PositionedCharacter(char, playerRandomField());
     const toComputerPosition = (char) => new PositionedCharacter(char, computerRandomField());
     const firstLevelTeamPlayer = generateTeam([Swordsman, Bowman], 1, 2);
-    const PlayerPositioned = firstLevelTeamPlayer.map((item) => toPlayerPosition(item));
     const firstLevelTeamComputer = generateTeam([Undead, Daemon, Vampire], 1, 2);
-    const ComputerPositioned = firstLevelTeamComputer.map((item) => toComputerPosition(item));
-    this.charsPositions = PlayerPositioned.concat(ComputerPositioned);
+    const teamGenertaion = () => {
+      const PlayerPositioned = firstLevelTeamPlayer.map((item) => toPlayerPosition(item));
+      const ComputerPositioned = firstLevelTeamComputer.map((item) => toComputerPosition(item));
+      this.charsPositions = PlayerPositioned.concat(ComputerPositioned);
+      // Обход одинаковых значений индексов через рекурсию
+      const positionsArr = [];
+      this.charsPositions.map((item) => positionsArr.push(item.position));
+      const positionsSet = new Set(positionsArr);
+      if (positionsSet.size !== positionsArr.length) {
+        teamGenertaion();
+      }
+    };
+    teamGenertaion();
     this.gamePlay.redrawPositions(this.charsPositions);
   }
 
@@ -79,7 +89,9 @@ export default class GameController {
         this.gamePlay.selectCell(index);
       } else if ((clickedChar.character.type === 'daemon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.position !== undefined) {
         // Функция атаки врага
-        if (this.attackCharacter(clickedChar, this.selected)) {
+        const testChar = clickedChar;
+        const testSelected = this.selected;
+        if (this.attackCharacter(testChar, testSelected)) {
           this.gamePlay.redrawPositions(this.attackCharacter(clickedChar, this.selected));
           // Типа покидаем ячейку для предотвращения миссклика
           this.onCellLeave(index);
@@ -202,13 +214,22 @@ export default class GameController {
     // Передача хода в геймстейт
       GameState.nextTurn();
       // Определение случайного хода
-      const nextMove = randomMove(this.charsPositions, this.gamePlay.boardSize);
-      // Определение и применение хода компьютера
-      if (nextMove.attack) {
-        this.attackCharacter(nextMove.attack, nextMove.char);
-      } else if (nextMove.move) {
-        this.moveCharecter(nextMove.move, nextMove.char);
-      }
+      let nextMove = randomMove(this.charsPositions, this.gamePlay.boardSize);
+      // Функция определения и применение хода компьютера
+      const cycledMove = () => {
+        if (nextMove.attack) {
+          this.attackCharacter(nextMove.attack, nextMove.char);
+        } else if (nextMove.move) {
+          if (!this.charsPositions.find((item) => item.position === nextMove.move)) {
+            this.moveCharecter(nextMove.move, nextMove.char);
+          } else {
+            // Обход залезания друг на друга через рекурсию
+            nextMove = randomMove(this.charsPositions, this.gamePlay.boardSize);
+            cycledMove();
+          }
+        }
+      };
+      cycledMove();
       // Проверка на смерть всех персонажей игрока после атаки компьютера
       if (!this.charsPositions.find((item) => item.character.type === 'swordsman' || item.character.type === 'bowman' || item.character.type === 'magician')) {
         // Выйгрыш компьютера
