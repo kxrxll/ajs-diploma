@@ -1,12 +1,12 @@
 export default class GameState {
-  constructor() {
-    this.turn = 'Player';
+  constructor(turn = 'Player', level, charsPositions) {
+    this.turn = turn;
     this.points = 0;
-    this.level = '';
-    this.charsPositions = [];
+    this.level = level;
+    this.charsPositions = charsPositions;
   }
 
-  static nextTurn() {
+  nextTurn() {
     if (this.turn === 'Player') {
       this.turn = 'Computer';
     } else {
@@ -14,15 +14,15 @@ export default class GameState {
     }
   }
 
-  static addPoints(number) {
+  addPoints(number) {
     this.points += number;
   }
 
-  static showPoints() {
+  showPoints() {
     return this.points;
   }
 
-  static resetPoints() {
+  resetPoints() {
     this.points = 0;
   }
 }

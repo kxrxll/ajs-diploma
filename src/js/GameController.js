@@ -6,7 +6,6 @@ import Mage from './Mage';
 import Undead from './Undead';
 import Daemon from './Daemon';
 import Vampire from './Vampire';
-import GameState from './GameState';
 import GamePlay from './GamePlay';
 import cursors from './cursors';
 import possibleMoves from './possibleMoves';
@@ -18,14 +17,18 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
-    this.gameState = new GameState();
     this.charsPositions = [];
     this.selected = {};
+    this.points = 0;
   }
 
   init() {
     // Новая игра
     this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
+    // Сохранение игры
+    this.gamePlay.addSaveGameListener(this.onSaveGameClick.bind(this));
+    // Загрузка игры
+    this.gamePlay.addLoadGameListener(this.onLoadGameClick.bind(this));
     // Добавление ховера и анховера на ячейки
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
@@ -89,13 +92,16 @@ export default class GameController {
         this.gamePlay.selectCell(index);
       } else if ((clickedChar.character.type === 'daemon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.position !== undefined) {
         // Функция атаки врага
-        const testChar = clickedChar;
-        const testSelected = this.selected;
-        if (this.attackCharacter(testChar, testSelected)) {
-          this.gamePlay.redrawPositions(this.attackCharacter(clickedChar, this.selected));
-          // Типа покидаем ячейку для предотвращения миссклика
-          this.onCellLeave(index);
-          this.computerTurn();
+        try {
+          const possibleAttackMove = this.attackCharacter(clickedChar, this.selected);
+          if (possibleAttack) {
+            this.gamePlay.redrawPositions(possibleAttackMove);
+            // Типа покидаем ячейку для предотвращения миссклика
+            this.onCellLeave(index);
+            this.computerTurn();
+          }
+        } catch (err) {
+          this.gamePlay.redrawPositions(this.charsPositions);
         }
       } else if ((clickedChar.character.type === 'deamon' || clickedChar.character.type === 'undead' || clickedChar.character.type === 'vampire') && this.selected.position === undefined) {
         // Попытка выбора вражеского персонажа
@@ -211,8 +217,6 @@ export default class GameController {
       // Выйгрыш игрока
       this.nextLevel();
     } else {
-    // Передача хода в геймстейт
-      GameState.nextTurn();
       // Определение случайного хода
       let nextMove = randomMove(this.charsPositions, this.gamePlay.boardSize);
       // Функция определения и применение хода компьютера
@@ -238,7 +242,6 @@ export default class GameController {
         this.onNewGameClick();
       } else {
         this.gamePlay.redrawPositions(this.charsPositions);
-        GameState.nextTurn();
       }
     }
   }
@@ -246,8 +249,8 @@ export default class GameController {
   nextLevel() {
     // Проверяем конец игры
     if (!themes.nextLevel(this.theme)) {
-      GamePlay.showError(`Congratulations! Your points: ${GameState.showPoints()}`);
-      GameState.resetPoints();
+      GamePlay.showError(`Congratulations! Your points: ${this.showPoints()}`);
+      this.resetPoints();
       this.onNewGameClick();
     }
     // Снимаем выделение и текущего выбранного персонажа
@@ -259,8 +262,8 @@ export default class GameController {
     // Обрабатываем команду игрока
     const newPlayerTeam = [];
     for (const postionedChar of this.charsPositions) {
-      // Считаем и отправляем баллы в GameState
-      GameState.addPoints(postionedChar.character.health);
+      // Считаем баллы
+      this.addPoints(postionedChar.character.health);
       postionedChar.character.levelUp();
       newPlayerTeam.push(postionedChar.character);
     }
@@ -304,6 +307,73 @@ export default class GameController {
     // Обьединение
     this.charsPositions = PlayerPositioned.concat(ComputerPositioned);
     // Отрисовка
+    this.gamePlay.redrawPositions(this.charsPositions);
+  }
+
+  nextTurn() {
+    if (this.turn === 'Player') {
+      this.turn = 'Computer';
+    } else {
+      this.turn = 'Player';
+    }
+  }
+
+  addPoints(number) {
+    this.points += number;
+  }
+
+  showPoints() {
+    return this.points;
+  }
+
+  resetPoints() {
+    this.points = 0;
+  }
+
+  onSaveGameClick() {
+    const saveGame = {};
+    saveGame.charsPositions = this.charsPositions;
+    saveGame.theme = this.theme;
+    saveGame.points = this.points;
+    this.stateService.save(saveGame);
+  }
+
+  onLoadGameClick() {
+    const loadGame = this.stateService.load();
+    const newPositionedChars = [];
+    for (const item of loadGame.charsPositions) {
+      const newChar = {};
+      newChar.character = {};
+      if (item.character.type === 'swordsman') {
+        newChar.character = new Swordsman();
+      }
+      if (item.character.type === 'bowman') {
+        newChar.character = new Bowman();
+      }
+      if (item.character.type === 'magician') {
+        newChar.character = new Mage();
+      }
+      if (item.character.type === 'undead') {
+        newChar.character = new Undead();
+      }
+      if (item.character.type === 'vampire') {
+        newChar.character = new Vampire();
+      }
+      if (item.character.type === 'daemon') {
+        newChar.character = new Daemon();
+      }
+      newChar.character.attack = item.character.attack;
+      newChar.character.defence = item.character.defence;
+      newChar.character.level = item.character.level;
+      newChar.character.health = item.character.health;
+      newChar.position = item.position;
+      newPositionedChars.push(newChar);
+    }
+    this.charsPositions = newPositionedChars;
+    this.theme = loadGame.theme;
+    this.points = loadGame.points;
+    this.gamePlay.drawUi(this.theme);
+    this.selected = {};
     this.gamePlay.redrawPositions(this.charsPositions);
   }
 }

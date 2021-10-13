@@ -4,6 +4,9 @@ export default class GameStateService {
   }
 
   save(state) {
+    if (this.storage.state) {
+      this.storage.removeItem('state');
+    }
     this.storage.setItem('state', JSON.stringify(state));
   }
 
